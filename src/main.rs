@@ -16,6 +16,8 @@ use serenity::{
 // This imports `typemap`'s `Key` as `TypeMapKey`.
 use serenity::prelude::*;
 
+mod commands;
+
 struct VoiceManager;
 
 impl TypeMapKey for VoiceManager {
@@ -48,8 +50,9 @@ fn main() -> Result<(), Box<std::error::Error>> {
             .configure(|c| c.on_mention(true))
             .cmd("join", join)
             .cmd("leave", leave)
-            .cmd("play-raw", play_raw)
-            .cmd("ping", ping),
+            .cmd("play", play_raw)
+            .cmd("ping", ping)
+            .command("quit", |c| c.cmd(commands::system::quit).owners_only(true)),
     );
 
     let _ = client
