@@ -1,16 +1,16 @@
-#[macro_use] extern crate serenity;
+#[macro_use]
+extern crate serenity;
 
 use std::{env, sync::Arc};
 
 use serenity::client::bridge::voice::ClientVoiceManager;
-use serenity::{client::{Context}, prelude::Mutex};
+use serenity::{client::Context, prelude::Mutex};
 
 use serenity::{
-    client::{CACHE, Client, EventHandler},
+    client::{Client, EventHandler, CACHE},
     framework::StandardFramework,
     model::{channel::Message, gateway::Ready, misc::Mentionable},
-    Result as SerenityResult,
-    voice,
+    voice, Result as SerenityResult,
 };
 
 // This imports `typemap`'s `Key` as `TypeMapKey`.
@@ -32,8 +32,7 @@ impl EventHandler for Handler {
 
 fn main() -> Result<(), Box<std::error::Error>> {
     // Configure the client with your Discord bot token in the environment.
-    let token = env::var("DISCORD_TOKEN")
-        .expect("Expected a DISCORD_TOKEN in the environment");
+    let token = env::var("DISCORD_TOKEN").expect("Expected a DISCORD_TOKEN in the environment");
     let mut client = Client::new(&token, Handler)?;
 
     // Obtain a lock to the data owned by the client, and insert the client's
@@ -44,53 +43,20 @@ fn main() -> Result<(), Box<std::error::Error>> {
         data.insert::<VoiceManager>(Arc::clone(&client.voice_manager));
     }
 
-    client.with_framework(StandardFramework::new()
-        .configure(|c| c
-            .prefix("~")
-            .on_mention(true))
-        .cmd("deafen", deafen)
-        .cmd("join", join)
-        .cmd("leave", leave)
-        .cmd("mute", mute)
-        .cmd("play", play)
-        .cmd("ping", ping)
-        .cmd("undeafen", undeafen)
-        .cmd("unmute", unmute));
+    client.with_framework(
+        StandardFramework::new()
+            .configure(|c| c.prefix("~").on_mention(true))
+            .cmd("join", join)
+            .cmd("leave", leave)
+            .cmd("play", play)
+            .cmd("ping", ping),
+    );
 
-    let _ = client.start().map_err(|why| println!("Client ended: {:?}", why));
+    let _ = client
+        .start()
+        .map_err(|why| println!("Client ended: {:?}", why));
     Ok(())
 }
-
-command!(deafen(ctx, msg) {
-    let guild_id = match CACHE.read().guild_channel(msg.channel_id) {
-        Some(channel) => channel.read().guild_id,
-        None => {
-            check_msg(msg.channel_id.say("Groups and DMs not supported"));
-
-            return Ok(());
-        },
-    };
-
-    let mut manager_lock = ctx.data.lock().get::<VoiceManager>().cloned().unwrap();
-    let mut manager = manager_lock.lock();
-
-    let handler = match manager.get_mut(guild_id) {
-        Some(handler) => handler,
-        None => {
-            check_msg(msg.reply("Not in a voice channel"));
-
-            return Ok(());
-        },
-    };
-
-    if handler.self_deaf {
-        check_msg(msg.channel_id.say("Already deafened"));
-    } else {
-        handler.deafen(true);
-
-        check_msg(msg.channel_id.say("Deafened"));
-    }
-});
 
 command!(join(ctx, msg) {
     let guild = match msg.guild() {
@@ -152,37 +118,6 @@ command!(leave(ctx, msg) {
     }
 });
 
-command!(mute(ctx, msg) {
-    let guild_id = match CACHE.read().guild_channel(msg.channel_id) {
-        Some(channel) => channel.read().guild_id,
-        None => {
-            check_msg(msg.channel_id.say("Groups and DMs not supported"));
-
-            return Ok(());
-        },
-    };
-
-    let mut manager_lock = ctx.data.lock().get::<VoiceManager>().cloned().expect("Expected VoiceManager in ShareMap.");
-    let mut manager = manager_lock.lock();
-
-    let handler = match manager.get_mut(guild_id) {
-        Some(handler) => handler,
-        None => {
-            check_msg(msg.reply("Not in a voice channel"));
-
-            return Ok(());
-        },
-    };
-
-    if handler.self_mute {
-        check_msg(msg.channel_id.say("Already muted"));
-    } else {
-        handler.mute(true);
-
-        check_msg(msg.channel_id.say("Now muted"));
-    }
-});
-
 command!(ping(_context, msg) {
     check_msg(msg.channel_id.say("Pong!"));
 });
@@ -232,49 +167,6 @@ command!(play(ctx, msg, args) {
         check_msg(msg.channel_id.say("Playing song"));
     } else {
         check_msg(msg.channel_id.say("Not in a voice channel to play in"));
-    }
-});
-
-command!(undeafen(ctx, msg) {
-    let guild_id = match CACHE.read().guild_channel(msg.channel_id) {
-        Some(channel) => channel.read().guild_id,
-        None => {
-            check_msg(msg.channel_id.say("Error finding channel info"));
-
-            return Ok(());
-        },
-    };
-
-    let mut manager_lock = ctx.data.lock().get::<VoiceManager>().cloned().expect("Expected VoiceManager in ShareMap.");
-    let mut manager = manager_lock.lock();
-
-    if let Some(handler) = manager.get_mut(guild_id) {
-        handler.deafen(false);
-
-        check_msg(msg.channel_id.say("Undeafened"));
-    } else {
-        check_msg(msg.channel_id.say("Not in a voice channel to undeafen in"));
-    }
-});
-
-command!(unmute(ctx, msg) {
-    let guild_id = match CACHE.read().guild_channel(msg.channel_id) {
-        Some(channel) => channel.read().guild_id,
-        None => {
-            check_msg(msg.channel_id.say("Error finding channel info"));
-
-            return Ok(());
-        },
-    };
-    let mut manager_lock = ctx.data.lock().get::<VoiceManager>().cloned().expect("Expected VoiceManager in ShareMap.");
-    let mut manager = manager_lock.lock();
-
-    if let Some(handler) = manager.get_mut(guild_id) {
-        handler.mute(false);
-
-        check_msg(msg.channel_id.say("Unmuted"));
-    } else {
-        check_msg(msg.channel_id.say("Not in a voice channel to undeafen in"));
     }
 });
 
