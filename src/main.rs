@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
 
     client.with_framework(
         StandardFramework::new()
-            .configure(|c| c.prefix("~").on_mention(true))
+            .configure(|c| c.on_mention(true))
             .cmd("join", join)
             .cmd("leave", leave)
             .cmd("play", play)
