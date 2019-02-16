@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
             .configure(|c| c.on_mention(true))
             .cmd("join", join)
             .cmd("leave", leave)
-            .cmd("play", play)
+            .cmd("play-raw", play_raw)
             .cmd("ping", ping),
     );
 
@@ -122,7 +122,7 @@ command!(ping(_context, msg) {
     check_msg(msg.channel_id.say("Pong!"));
 });
 
-command!(play(ctx, msg, args) {
+command!(play_raw(ctx, msg, args) {
     let url = match args.single::<String>() {
         Ok(url) => url,
         Err(_) => {
