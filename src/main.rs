@@ -9,7 +9,7 @@ use serenity::{client::Context, prelude::Mutex};
 use serenity::{
     client::{Client, EventHandler, CACHE},
     framework::StandardFramework,
-    model::{channel::Message, gateway::Ready, misc::Mentionable},
+    model::{channel::Message, event::ResumedEvent, gateway::Ready, misc::Mentionable},
     voice, Result as SerenityResult,
 };
 
@@ -29,6 +29,10 @@ struct Handler;
 impl EventHandler for Handler {
     fn ready(&self, _: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
+    }
+
+    fn resume(&self, _: Context, _: ResumedEvent) {
+        println!("Resumed");
     }
 }
 
