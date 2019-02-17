@@ -4,12 +4,12 @@ extern crate serenity;
 use std::{env, sync::Arc};
 
 use serenity::client::bridge::voice::ClientVoiceManager;
-use serenity::{client::Context, prelude::Mutex};
+use serenity::prelude::Mutex;
 
 use serenity::{
-    client::{Client, EventHandler, CACHE},
+    client::{Client, CACHE},
     framework::StandardFramework,
-    model::{channel::Message, event::ResumedEvent, gateway::Ready, misc::Mentionable},
+    model::{channel::Message, misc::Mentionable},
     voice, Result as SerenityResult,
 };
 
@@ -17,6 +17,7 @@ use serenity::{
 use serenity::prelude::*;
 
 mod commands;
+mod handler;
 
 struct VoiceManager;
 
@@ -24,22 +25,10 @@ impl TypeMapKey for VoiceManager {
     type Value = Arc<Mutex<ClientVoiceManager>>;
 }
 
-struct Handler;
-
-impl EventHandler for Handler {
-    fn ready(&self, _: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
-    }
-
-    fn resume(&self, _: Context, _: ResumedEvent) {
-        println!("Resumed");
-    }
-}
-
 fn main() -> Result<(), Box<std::error::Error>> {
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a DISCORD_TOKEN in the environment");
-    let mut client = Client::new(&token, Handler)?;
+    let mut client = Client::new(&token, handler::Handler)?;
 
     // Obtain a lock to the data owned by the client, and insert the client's
     // voice manager into it. This allows the voice manager to be accessible by
