@@ -30,9 +30,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
             .command("quit", |c| c.cmd(commands::system::quit).owners_only(true)),
     );
 
-    let _ = client
-        .start()
-        .map_err(|why| println!("Client ended: {:?}", why));
+    client.start()?;
     Ok(())
 }
 
