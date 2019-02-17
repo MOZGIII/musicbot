@@ -27,7 +27,30 @@ fn main() -> Result<(), Box<std::error::Error>> {
             .cmd("leave", leave)
             .cmd("play", play_raw)
             .cmd("ping", ping)
-            .command("quit", |c| c.cmd(commands::system::quit).owners_only(true)),
+            .command("quit", |c| c.cmd(commands::system::quit).owners_only(true))
+            .before(|_, msg, command_name| {
+                println!(
+                    "Got command '{}' by user '{}'",
+                    command_name, msg.author.name
+                );
+                true
+            })
+            .unrecognised_command(|_, msg, unknown_command_name| {
+                let _ = msg.channel_id.say(format!(
+                    "Could not find command named '{}'",
+                    unknown_command_name,
+                ));
+            })
+            .message_without_command(|_, message| {
+                println!("Message is not a command '{}'", message.content);
+            })
+            .on_dispatch_error(|_ctx, msg, error| {
+                if let serenity::framework::standard::DispatchError::OnlyForOwners = error {
+                    let _ = msg
+                        .channel_id
+                        .say("This command can only be invoked by owners");
+                }
+            }),
     );
 
     client.start()?;
