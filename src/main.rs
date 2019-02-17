@@ -1,11 +1,13 @@
 #[macro_use]
 extern crate serenity;
 
+use std::collections::HashSet;
 use std::env;
 
 use serenity::{
     client::{Client, CACHE},
     framework::StandardFramework,
+    http,
     model::{channel::Message, misc::Mentionable},
     voice, Result as SerenityResult,
 };
@@ -18,11 +20,14 @@ use voice_manager::prelude::*;
 fn main() -> Result<(), Box<std::error::Error>> {
     let token = env::var("DISCORD_TOKEN").expect("Expected a DISCORD_TOKEN in the environment");
     let mut client = Client::new(&token, handler::Handler)?;
+
+    let owners = load_app_owners()?;
+
     voice_manager::register_in_data(&mut client);
 
     client.with_framework(
         StandardFramework::new()
-            .configure(|c| c.on_mention(true))
+            .configure(|c| c.on_mention(true).owners(owners))
             .cmd("join", join)
             .cmd("leave", leave)
             .cmd("play", play_raw)
@@ -55,6 +60,13 @@ fn main() -> Result<(), Box<std::error::Error>> {
 
     client.start()?;
     Ok(())
+}
+
+fn load_app_owners() -> Result<HashSet<serenity::model::id::UserId>, Box<std::error::Error>> {
+    let owner_id = http::get_current_application_info()?.owner.id;
+    let mut set = HashSet::new();
+    set.insert(owner_id);
+    Ok(set)
 }
 
 command!(join(ctx, msg) {
