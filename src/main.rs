@@ -6,7 +6,7 @@ use std::env;
 
 use serenity::{
     client::{Client, CACHE},
-    framework::StandardFramework,
+    framework::standard::{help_commands, StandardFramework},
     http,
     model::{channel::Message, misc::Mentionable},
     voice, Result as SerenityResult,
@@ -42,6 +42,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
                 g.owners_only(true)
                     .command("exp1", |c| c.cmd(commands::experimental::exp1))
             })
+            .help(help_commands::with_embeds)
             .before(|_, msg, command_name| {
                 println!(
                     "Got command '{}' by user '{}'",
