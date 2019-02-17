@@ -33,6 +33,10 @@ fn main() -> Result<(), Box<std::error::Error>> {
             .cmd("play", play_raw)
             .cmd("ping", ping)
             .command("quit", |c| c.cmd(commands::system::quit).owners_only(true))
+            .group("Experimental", |g| {
+                g.owners_only(true)
+                    .command("exp1", |c| c.cmd(commands::experimental::exp1))
+            })
             .before(|_, msg, command_name| {
                 println!(
                     "Got command '{}' by user '{}'",
