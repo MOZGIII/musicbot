@@ -28,11 +28,16 @@ fn main() -> Result<(), Box<std::error::Error>> {
     client.with_framework(
         StandardFramework::new()
             .configure(|c| c.on_mention(true).owners(owners))
-            .cmd("join", join)
-            .cmd("leave", leave)
-            .cmd("play", play_raw)
-            .cmd("ping", ping)
-            .command("quit", |c| c.cmd(commands::system::quit).owners_only(true))
+            .group("Voice", |g| {
+                g.cmd("join", join)
+                    .cmd("leave", leave)
+                    .cmd("play", play_raw)
+                    .cmd("ping", ping)
+            })
+            .group("System", |g| {
+                g.owners_only(true)
+                    .command("quit", |c| c.cmd(commands::system::quit))
+            })
             .group("Experimental", |g| {
                 g.owners_only(true)
                     .command("exp1", |c| c.cmd(commands::experimental::exp1))
