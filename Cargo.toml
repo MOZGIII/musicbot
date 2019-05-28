@@ -8,5 +8,5 @@ edition = "2018"
 
 [dependencies.serenity]
 git = "https://github.com/serenity-rs/serenity.git"
-rev = "745ae32b63603d4ee64c9b2393a447726b89350b"
+branch = "v0.6.x"
 features = ["cache", "framework", "standard_framework", "voice"]

@@ -1,5 +1,23 @@
-command!(quit(ctx, msg, _args) {
-    ctx.quit();
+use serenity::{
+    client::Context,
+    framework::standard::{
+        CommandResult,
+        macros::{command, group},
+    },
+    model::channel::Message,
+};
 
-    let _ = msg.reply("Shutting down!");
+group!({
+    name: "system",
+    options: {
+        owners_only: true,
+    },
+    commands: [quit]
 });
+
+#[command]
+fn quit(ctx: &mut Context, msg: &Message) -> CommandResult {
+    ctx.quit();
+    let _ = msg.reply(&ctx, "Shutting down!");
+    Ok(())
+}

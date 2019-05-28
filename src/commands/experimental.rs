@@ -1,5 +1,23 @@
-command!(exp1(_ctx, msg, _args) {
-    msg.channel_id.send_message(|m| {
+use serenity::{
+    client::Context,
+    framework::standard::{
+        CommandResult,
+        macros::{command, group},
+    },
+    model::channel::Message,
+};
+
+group!({
+    name: "experimental",
+    options: {
+        owners_only: true,
+    },
+    commands: [exp1]
+});
+
+#[command]
+fn exp1(ctx: &mut Context, msg: &Message) -> CommandResult {
+    msg.channel_id.send_message(&ctx, |m| {
         m.content("Hello, World!").embed(|e| {
             e.title("This is a title")
                 .description("This is a description")
@@ -20,4 +38,5 @@ command!(exp1(_ctx, msg, _args) {
                 .colour((246, 111, 0))
         })
     })?;
-});
+    Ok(())
+}

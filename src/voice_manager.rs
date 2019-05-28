@@ -16,7 +16,7 @@ pub fn register_in_data(client: &mut Client) {
     // Obtain a lock to the data owned by the client, and insert the client's
     // voice manager into it. This allows the voice manager to be accessible by
     // event handlers and framework commands.
-    let mut data = client.data.lock();
+    let mut data = client.data.write();
     data.insert::<VoiceManager>(Arc::clone(&client.voice_manager));
 }
 

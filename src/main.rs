@@ -1,48 +1,63 @@
-#[macro_use]
-extern crate serenity;
-
 use std::collections::HashSet;
 use std::env;
 
 use serenity::{
-    client::{Client, CACHE},
-    framework::standard::{help_commands, StandardFramework},
-    http,
-    model::{channel::Message, misc::Mentionable},
+    client::{Context, Client},
+    framework::standard::{
+        HelpOptions,
+        help_commands,
+        Args,
+        CommandResult,
+        CommandGroup,
+        StandardFramework,
+        macros::{
+            command,
+            group,
+            help,
+        },
+    },
+    model::{channel::Message, id::UserId, misc::Mentionable},
     voice, Result as SerenityResult,
 };
 
+mod standard_framerork_config;
+use standard_framerork_config::StandardFrameworkConfig;
 mod commands;
 mod handler;
 mod voice_manager;
 use voice_manager::prelude::*;
 
+#[help]
+#[individual_command_tip =
+"Hello! こんにちは！Hola! Bonjour! 您好!\n\
+If you want more information about a specific command, just pass the command as argument."]
+#[command_not_found_text = "Could not find: `{}`."]
+fn bot_help(
+    context: &mut Context,
+    msg: &Message,
+    args: Args,
+    help_options: &'static HelpOptions,
+    groups: &[&'static CommandGroup],
+    owners: HashSet<UserId>
+) -> CommandResult {
+    help_commands::with_embeds(context, msg, args, help_options, groups, owners)
+}
+
 fn main() -> Result<(), Box<std::error::Error>> {
     let token = env::var("DISCORD_TOKEN").expect("Expected a DISCORD_TOKEN in the environment");
     let mut client = Client::new(&token, handler::Handler)?;
 
-    let owners = load_app_owners()?;
+    let configurator = StandardFrameworkConfig::new(&client.cache_and_http.http)?;
 
     voice_manager::register_in_data(&mut client);
 
     client.with_framework(
         StandardFramework::new()
-            .configure(|c| c.on_mention(true).owners(owners))
-            .group("Voice", |g| {
-                g.cmd("join", join)
-                    .cmd("leave", leave)
-                    .cmd("play", play_raw)
-                    .cmd("ping", ping)
-            })
-            .group("System", |g| {
-                g.owners_only(true)
-                    .command("quit", |c| c.cmd(commands::system::quit))
-            })
-            .group("Experimental", |g| {
-                g.owners_only(true)
-                    .command("exp1", |c| c.cmd(commands::experimental::exp1))
-            })
-            .help(help_commands::with_embeds)
+            .configure(|c| configurator.configure(c))
+            .help(&BOT_HELP_HELP_COMMAND)
+            .group(&VOICE_GROUP)
+            .group(&commands::system::SYSTEM_GROUP)
+            .group(&commands::experimental::EXPERIMENTAL_GROUP)
             .before(|_, msg, command_name| {
                 println!(
                     "Got command '{}' by user '{}'",
@@ -50,20 +65,20 @@ fn main() -> Result<(), Box<std::error::Error>> {
                 );
                 true
             })
-            .unrecognised_command(|_, msg, unknown_command_name| {
-                let _ = msg.channel_id.say(format!(
+            .unrecognised_command(|ctx, msg, unknown_command_name| {
+                let _ = msg.channel_id.say(&ctx.http, format!(
                     "Could not find command named '{}'",
                     unknown_command_name,
                 ));
             })
-            .message_without_command(|_, message| {
+            .normal_message(|_, message| {
                 println!("Message is not a command '{}'", message.content);
             })
-            .on_dispatch_error(|_ctx, msg, error| {
+            .on_dispatch_error(|ctx, msg, error| {
                 if let serenity::framework::standard::DispatchError::OnlyForOwners = error {
                     let _ = msg
                         .channel_id
-                        .say("This command can only be invoked by owners");
+                        .say(&ctx.http, "This command can only be invoked by owners");
                 }
             }),
     );
@@ -72,18 +87,18 @@ fn main() -> Result<(), Box<std::error::Error>> {
     Ok(())
 }
 
-fn load_app_owners() -> Result<HashSet<serenity::model::id::UserId>, Box<std::error::Error>> {
-    let owner_id = http::get_current_application_info()?.owner.id;
-    let mut set = HashSet::new();
-    set.insert(owner_id);
-    Ok(set)
-}
+group!({
+    name: "voice",
+    options: {},
+    commands: [join, leave, play_raw, ping]
+});
 
-command!(join(ctx, msg) {
-    let guild = match msg.guild() {
+#[command]
+fn join(ctx: &mut Context, msg: &Message) -> CommandResult {
+    let guild = match msg.guild(&ctx.cache) {
         Some(guild) => guild,
         None => {
-            check_msg(msg.channel_id.say("Groups and DMs not supported"));
+            check_msg(msg.channel_id.say(&ctx.http, "Groups and DMs not supported"));
 
             return Ok(());
         }
@@ -100,75 +115,83 @@ command!(join(ctx, msg) {
     let connect_to = match channel_id {
         Some(channel) => channel,
         None => {
-            check_msg(msg.reply("Not in a voice channel"));
+            check_msg(msg.reply(&ctx, "Not in a voice channel"));
 
             return Ok(());
         }
     };
 
-    let mut manager_lock = ctx.data.lock().get::<VoiceManager>().cloned().expect("Expected VoiceManager in ShareMap.");
+    let manager_lock = ctx.data.read().get::<VoiceManager>().cloned().expect("Expected VoiceManager in ShareMap.");
     let mut manager = manager_lock.lock();
 
     if manager.join(guild_id, connect_to).is_some() {
-        check_msg(msg.channel_id.say(&format!("Joined {}", connect_to.mention())));
+        check_msg(msg.channel_id.say(&ctx.http, &format!("Joined {}", connect_to.mention())));
     } else {
-        check_msg(msg.channel_id.say("Error joining the channel"));
+        check_msg(msg.channel_id.say(&ctx.http, "Error joining the channel"));
     }
-});
 
-command!(leave(ctx, msg) {
-    let guild_id = match CACHE.read().guild_channel(msg.channel_id) {
+    Ok(())
+}
+
+#[command]
+fn leave(ctx: &mut Context, msg: &Message) -> CommandResult {
+    let guild_id = match ctx.cache.read().guild_channel(msg.channel_id) {
         Some(channel) => channel.read().guild_id,
         None => {
-            check_msg(msg.channel_id.say("Groups and DMs not supported"));
+            check_msg(msg.channel_id.say(&ctx.http, "Groups and DMs not supported"));
 
             return Ok(());
         },
     };
 
-    let mut manager_lock = ctx.data.lock().get::<VoiceManager>().cloned().expect("Expected VoiceManager in ShareMap.");
+    let manager_lock = ctx.data.read().get::<VoiceManager>().cloned().expect("Expected VoiceManager in ShareMap.");
     let mut manager = manager_lock.lock();
     let has_handler = manager.get(guild_id).is_some();
 
     if has_handler {
         manager.remove(guild_id);
 
-        check_msg(msg.channel_id.say("Left voice channel"));
+        check_msg(msg.channel_id.say(&ctx.http, "Left voice channel"));
     } else {
-        check_msg(msg.reply("Not in a voice channel"));
+        check_msg(msg.reply(&ctx, "Not in a voice channel"));
     }
-});
 
-command!(ping(_context, msg) {
-    check_msg(msg.channel_id.say("Pong!"));
-});
+    Ok(())
+}
 
-command!(play_raw(ctx, msg, args) {
+#[command]
+fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
+    check_msg(msg.channel_id.say(&ctx.http, "Pong!"));
+    Ok(())
+}
+
+#[command]
+fn play_raw(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let url = match args.single::<String>() {
         Ok(url) => url,
         Err(_) => {
-            check_msg(msg.channel_id.say("Must provide a URL to a video or audio"));
+            check_msg(msg.channel_id.say(&ctx.http, "Must provide a URL to a video or audio"));
 
             return Ok(());
         },
     };
 
     if !url.starts_with("http") {
-        check_msg(msg.channel_id.say("Must provide a valid URL"));
+        check_msg(msg.channel_id.say(&ctx.http, "Must provide a valid URL"));
 
         return Ok(());
     }
 
-    let guild_id = match CACHE.read().guild_channel(msg.channel_id) {
+    let guild_id = match ctx.cache.read().guild_channel(msg.channel_id) {
         Some(channel) => channel.read().guild_id,
         None => {
-            check_msg(msg.channel_id.say("Error finding channel info"));
+            check_msg(msg.channel_id.say(&ctx.http, "Error finding channel info"));
 
             return Ok(());
         },
     };
 
-    let mut manager_lock = ctx.data.lock().get::<VoiceManager>().cloned().expect("Expected VoiceManager in ShareMap.");
+    let manager_lock = ctx.data.read().get::<VoiceManager>().cloned().expect("Expected VoiceManager in ShareMap.");
     let mut manager = manager_lock.lock();
 
     if let Some(handler) = manager.get_mut(guild_id) {
@@ -177,7 +200,7 @@ command!(play_raw(ctx, msg, args) {
             Err(why) => {
                 println!("Err starting source: {:?}", why);
 
-                check_msg(msg.channel_id.say("Error sourcing ffmpeg"));
+                check_msg(msg.channel_id.say(&ctx.http, "Error sourcing ffmpeg"));
 
                 return Ok(());
             },
@@ -185,11 +208,13 @@ command!(play_raw(ctx, msg, args) {
 
         handler.play(source);
 
-        check_msg(msg.channel_id.say("Playing song"));
+        check_msg(msg.channel_id.say(&ctx.http, "Playing song"));
     } else {
-        check_msg(msg.channel_id.say("Not in a voice channel to play in"));
+        check_msg(msg.channel_id.say(&ctx.http, "Not in a voice channel to play in"));
     }
-});
+
+    Ok(())
+}
 
 /// Checks that a message successfully sent; if not, then logs why to stdout.
 fn check_msg(result: SerenityResult<Message>) {
