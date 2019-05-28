@@ -16,7 +16,9 @@ use crate::voice_manager::prelude::*;
 
 group!({
     name: "voice",
-    options: {},
+    options: {
+        only: "guilds",
+    },
     commands: [join, leave, play_raw, ping]
 });
 
