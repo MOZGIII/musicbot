@@ -15,4 +15,5 @@ The following environment variables are available:
 ### Docker
 
 Docker Hub: https://hub.docker.com/r/mozgiii/musicbot
+
 Docker Image: `mozgiii/musicbot:latest`
