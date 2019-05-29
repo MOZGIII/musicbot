@@ -1,3 +1,5 @@
+#![warn(rust_2018_idioms)]
+
 use std::env;
 
 use serenity::{client::Client, framework::standard::StandardFramework};
@@ -8,7 +10,7 @@ mod commands;
 mod handler;
 mod voice_manager;
 
-fn main() -> Result<(), Box<std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = env::var("DISCORD_TOKEN").expect("Expected a DISCORD_TOKEN in the environment");
     let mut client = Client::new(&token, handler::Handler)?;
 

@@ -8,7 +8,7 @@ pub struct StandardFrameworkConfig {
 }
 
 impl StandardFrameworkConfig {
-    pub fn new(http: &http::Http) -> Result<Self, Box<std::error::Error>> {
+    pub fn new(http: &http::Http) -> Result<Self, Box<dyn std::error::Error>> {
         let info = http.get_current_application_info()?;
         Ok(Self {
             owner_id: info.owner.id,
