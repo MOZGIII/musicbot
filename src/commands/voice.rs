@@ -5,9 +5,10 @@ use serenity::{
         Args, CommandResult,
     },
     model::{channel::Message, misc::Mentionable},
-    voice, Result as SerenityResult,
+    voice,
 };
 
+use crate::helpers::check_msg;
 use crate::voice_manager::prelude::*;
 
 group!({
@@ -15,7 +16,7 @@ group!({
     options: {
         only: "guilds",
     },
-    commands: [join, leave, play_raw, ping]
+    commands: [join, leave, play_raw]
 });
 
 #[command]
@@ -104,12 +105,6 @@ fn leave(ctx: &mut Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
-fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
-    check_msg(msg.channel_id.say(&ctx.http, "Pong!"));
-    Ok(())
-}
-
-#[command]
 fn play_raw(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let url = match args.single::<String>() {
         Ok(url) => url,
@@ -169,11 +164,4 @@ fn play_raw(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     }
 
     Ok(())
-}
-
-/// Checks that a message successfully sent; if not, then logs why to stdout.
-fn check_msg(result: SerenityResult<Message>) {
-    if let Err(why) = result {
-        println!("Error sending message: {:?}", why);
-    }
 }

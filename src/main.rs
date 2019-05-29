@@ -9,6 +9,7 @@ use standard_framerork_config::StandardFrameworkConfig;
 mod commands;
 mod handler;
 mod voice_manager;
+mod helpers;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = env::var("DISCORD_TOKEN").expect("Expected a DISCORD_TOKEN in the environment");
