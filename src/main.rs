@@ -30,10 +30,10 @@ fn main() -> Result<(), Box<std::error::Error>> {
                 true
             })
             .unrecognised_command(|ctx, msg, unknown_command_name| {
-                let _ = msg.channel_id.say(&ctx.http, format!(
-                    "Could not find command named '{}'",
-                    unknown_command_name,
-                ));
+                let _ = msg.channel_id.say(
+                    &ctx.http,
+                    format!("Could not find command named '{}'", unknown_command_name,),
+                );
             })
             .normal_message(|_, message| {
                 println!("Message is not a command '{}'", message.content);

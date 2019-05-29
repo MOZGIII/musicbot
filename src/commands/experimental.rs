@@ -1,8 +1,8 @@
 use serenity::{
     client::Context,
     framework::standard::{
-        CommandResult,
         macros::{command, group},
+        CommandResult,
     },
     model::channel::Message,
 };

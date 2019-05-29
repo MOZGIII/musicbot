@@ -1,10 +1,6 @@
 use std::collections::HashSet;
 
-use serenity::{
-    framework::standard::Configuration,
-    http,
-    model::id::UserId,
-};
+use serenity::{framework::standard::Configuration, http, model::id::UserId};
 
 pub struct StandardFrameworkConfig {
     owner_id: UserId,
