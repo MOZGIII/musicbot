@@ -1,7 +1,5 @@
-use serenity::voice;
-
 use super::prelude::*;
-use crate::helpers::check_msg;
+use serenity::voice;
 
 group!({
     name: "voice",
@@ -13,132 +11,95 @@ group!({
 
 #[command]
 fn join(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let guild = match msg.guild(&ctx.cache) {
-        Some(guild) => guild,
-        None => {
-            check_msg(
-                msg.channel_id
-                    .say(&ctx.http, "Groups and DMs not supported"),
-            );
+    let guild_mutex = msg
+        .guild(&ctx.cache)
+        .ok_or_else(|| "Groups and DMs not supported")?;
 
-            return Ok(());
-        }
-    };
+    let guild = guild_mutex.read();
 
-    let guild_id = guild.read().id;
+    let guild_id = guild.id;
 
     let channel_id = guild
-        .read()
         .voice_states
         .get(&msg.author.id)
         .and_then(|voice_state| voice_state.channel_id);
 
-    let connect_to = match channel_id {
-        Some(channel) => channel,
-        None => {
-            check_msg(msg.reply(&ctx, "Not in a voice channel"));
+    let connect_to = channel_id.ok_or_else(|| "Not in a voice channel")?;
 
-            return Ok(());
-        }
-    };
+    let voice_manager_mutex = ctx.data.read().voice_manager();
+    let mut voice_manager = voice_manager_mutex.lock();
 
-    let manager_mutex = ctx.data.read().voice_manager();
-    let mut manager = manager_mutex.lock();
+    let _ = voice_manager
+        .join(guild_id, connect_to)
+        .ok_or_else(|| "Error joining the channel")?;
 
-    if manager.join(guild_id, connect_to).is_some() {
-        check_msg(
-            msg.channel_id
-                .say(&ctx.http, &format!("Joined {}", connect_to.mention())),
-        );
-    } else {
-        check_msg(msg.channel_id.say(&ctx.http, "Error joining the channel"));
-    }
-
+    msg.channel_id
+        .say(&ctx.http, &format!("Joined {}", connect_to.mention()))?;
     Ok(())
 }
 
 #[command]
 fn leave(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let guild_id = match ctx.cache.read().guild_channel(msg.channel_id) {
-        Some(channel) => channel.read().guild_id,
-        None => {
-            check_msg(
-                msg.channel_id
-                    .say(&ctx.http, "Groups and DMs not supported"),
-            );
+    let guild_channel = ctx
+        .cache
+        .read()
+        .guild_channel(msg.channel_id)
+        .ok_or_else(|| "Groups and DMs not supported")?;
 
-            return Ok(());
-        }
-    };
+    let guild_id = guild_channel.read().guild_id;
 
-    let manager_lock = ctx.data.read().voice_manager();
-    let mut manager = manager_lock.lock();
-    let has_handler = manager.get(guild_id).is_some();
+    let voice_manager_mutex = ctx.data.read().voice_manager();
+    let mut voice_manager = voice_manager_mutex.lock();
 
-    if has_handler {
-        manager.remove(guild_id);
+    let _ = voice_manager
+        .get(guild_id)
+        .ok_or_else(|| "Not in a voice channel")?;
 
-        check_msg(msg.channel_id.say(&ctx.http, "Left voice channel"));
-    } else {
-        check_msg(msg.reply(&ctx, "Not in a voice channel"));
-    }
+    let _ = voice_manager
+        .remove(guild_id)
+        .ok_or_else(|| "Unable to leave voice channel")?;
+
+    msg.channel_id.say(&ctx.http, "Left voice channel")?;
 
     Ok(())
 }
 
 #[command]
 fn play_raw(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
-    let url = match args.single::<String>() {
-        Ok(url) => url,
-        Err(_) => {
-            check_msg(
-                msg.channel_id
-                    .say(&ctx.http, "Must provide a URL to a video or audio"),
-            );
-
-            return Ok(());
-        }
-    };
+    let url = args
+        .single::<String>()
+        .map_err(|_| "Must provide a URL to a video or audio")?;
 
     if !url.starts_with("http") {
-        check_msg(msg.channel_id.say(&ctx.http, "Must provide a valid URL"));
-
-        return Ok(());
+        return Err("Must provide a valid URL".into());
     }
 
-    let guild_id = match ctx.cache.read().guild_channel(msg.channel_id) {
-        Some(channel) => channel.read().guild_id,
-        None => {
-            check_msg(msg.channel_id.say(&ctx.http, "Error finding channel info"));
+    let guild_channel = ctx
+        .cache
+        .read()
+        .guild_channel(msg.channel_id)
+        .ok_or_else(|| "Groups and DMs not supported")?;
 
-            return Ok(());
+    let guild_id = guild_channel.read().guild_id;
+
+    let voice_manager_mutex = ctx.data.read().voice_manager();
+    let mut voice_manager = voice_manager_mutex.lock();
+
+    let handler = voice_manager
+        .get_mut(guild_id)
+        .ok_or_else(|| "Not in a voice channel to play in")?;
+
+    let source = match voice::ytdl(&url) {
+        Ok(source) => source,
+        Err(why) => {
+            println!("Err starting source: {:?}", why);
+            return Err("Error sourcing ffmpeg".into());
         }
     };
 
-    let manager_lock = ctx.data.read().voice_manager();
-    let mut manager = manager_lock.lock();
+    handler.play(source);
 
-    if let Some(handler) = manager.get_mut(guild_id) {
-        let source = match voice::ytdl(&url) {
-            Ok(source) => source,
-            Err(why) => {
-                println!("Err starting source: {:?}", why);
-
-                check_msg(msg.channel_id.say(&ctx.http, "Error sourcing ffmpeg"));
-
-                return Ok(());
-            }
-        };
-
-        handler.play(source);
-
-        check_msg(msg.channel_id.say(&ctx.http, "Playing song"));
-    } else {
-        check_msg(
-            msg.channel_id
-                .say(&ctx.http, "Not in a voice channel to play in"),
-        );
-    }
+    msg.channel_id.say(&ctx.http, "Playing song")?;
 
     Ok(())
 }

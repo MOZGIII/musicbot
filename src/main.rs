@@ -8,7 +8,6 @@ use standard_framerork_config::StandardFrameworkConfig;
 mod commands;
 mod data;
 mod handler;
-mod helpers;
 
 use data::InitialData;
 
@@ -48,6 +47,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let _ = msg
                         .channel_id
                         .say(&ctx.http, "This command can only be invoked by owners");
+                }
+            })
+            .after(|ctx, msg, command_name, res| {
+                if let Err(err) = res {
+                    println!(
+                        "Error while processing {:?} command: {:?}",
+                        command_name, err
+                    );
+                    if let Err(why) = msg.channel_id.say(&ctx.http, err.0) {
+                        println!("Error sending message: {:?}", why);
+                    }
                 }
             }),
     );
