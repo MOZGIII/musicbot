@@ -686,7 +686,7 @@ dependencies = [
 
 [[package]]
 name = "libsodium-sys"
-version = "0.2.2"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cc 1.0.45 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1322,7 +1322,7 @@ dependencies = [
  "rustls 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.88 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.38 (registry+https://github.com/rust-lang/crates.io-index)",
- "sodiumoxide 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sodiumoxide 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "threadpool 1.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "tungstenite 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "typemap 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1358,11 +1358,11 @@ dependencies = [
 
 [[package]]
 name = "sodiumoxide"
-version = "0.2.2"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.62 (registry+https://github.com/rust-lang/crates.io-index)",
- "libsodium-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libsodium-sys 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2089,7 +2089,7 @@ dependencies = [
 "checksum libc 0.2.62 (registry+https://github.com/rust-lang/crates.io-index)" = "34fcd2c08d2f832f376f4173a231990fa5aef4e99fb569867318a227ef4c06ba"
 "checksum libflate 0.1.25 (registry+https://github.com/rust-lang/crates.io-index)" = "90c6f86f4b0caa347206f916f8b687b51d77c6ef8ff18d52dd007491fd580529"
 "checksum libloading 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9c3ad660d7cb8c5822cd83d10897b0f1f1526792737a179e73896152f85b88c2"
-"checksum libsodium-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "de29595a79ddae2612ad0f27793a0b86cdf05a12f94ad5b87674540cc568171e"
+"checksum libsodium-sys 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)" = "1c344ff12b90ef8fa1f0fffacd348c1fd041db331841fec9eab23fdb991f5e73"
 "checksum lock_api 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "62ebf1391f6acad60e5c8b43706dde4582df75c06698ab44511d15016bc2442c"
 "checksum lock_api 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f8912e782533a93a167888781b836336a6ca5da6175c05944c86cf28c31104dc"
 "checksum log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "c84ec4b527950aa83a329754b01dbe3f58361d1c5efacd1f6d68c494d08a17c6"
@@ -2163,7 +2163,7 @@ dependencies = [
 "checksum sha-1 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "23962131a91661d643c98940b20fcaffe62d776a823247be80a48fcb8b6fce68"
 "checksum slab 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
 "checksum smallvec 0.6.8 (registry+https://github.com/rust-lang/crates.io-index)" = "88aea073965ab29f6edb5493faf96ad662fb18aa9eeb186a3b7057951605ed15"
-"checksum sodiumoxide 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "31532969f87f66ea5667b203fdee70aec8ddbe25aac69d243daff58c01688152"
+"checksum sodiumoxide 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)" = "585232e78a4fc18133eef9946d3080befdf68b906c51b621531c37e91787fa2b"
 "checksum sourcefile 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "4bf77cb82ba8453b42b6ae1d692e4cdc92f9a47beaf89a847c8be83f4e328ad3"
 "checksum spin 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 "checksum stable_deref_trait 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "dba1a27d3efae4351c8051072d619e3ade2820635c3958d826bfea39d59b54c8"
