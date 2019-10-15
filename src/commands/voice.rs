@@ -2,7 +2,6 @@ use serenity::voice;
 
 use super::prelude::*;
 use crate::helpers::check_msg;
-use crate::voice_manager::prelude::*;
 
 group!({
     name: "voice",
@@ -43,13 +42,8 @@ fn join(ctx: &mut Context, msg: &Message) -> CommandResult {
         }
     };
 
-    let manager_lock = ctx
-        .data
-        .read()
-        .get::<VoiceManager>()
-        .cloned()
-        .expect("Expected VoiceManager in ShareMap.");
-    let mut manager = manager_lock.lock();
+    let manager_mutex = ctx.data.read().voice_manager();
+    let mut manager = manager_mutex.lock();
 
     if manager.join(guild_id, connect_to).is_some() {
         check_msg(
@@ -77,12 +71,7 @@ fn leave(ctx: &mut Context, msg: &Message) -> CommandResult {
         }
     };
 
-    let manager_lock = ctx
-        .data
-        .read()
-        .get::<VoiceManager>()
-        .cloned()
-        .expect("Expected VoiceManager in ShareMap.");
+    let manager_lock = ctx.data.read().voice_manager();
     let mut manager = manager_lock.lock();
     let has_handler = manager.get(guild_id).is_some();
 
@@ -126,12 +115,7 @@ fn play_raw(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
         }
     };
 
-    let manager_lock = ctx
-        .data
-        .read()
-        .get::<VoiceManager>()
-        .cloned()
-        .expect("Expected VoiceManager in ShareMap.");
+    let manager_lock = ctx.data.read().voice_manager();
     let mut manager = manager_lock.lock();
 
     if let Some(handler) = manager.get_mut(guild_id) {

@@ -1,15 +1,16 @@
 #![warn(rust_2018_idioms)]
 
-use std::env;
-
 use serenity::{client::Client, framework::standard::StandardFramework};
-
+use std::env;
 mod standard_framerork_config;
 use standard_framerork_config::StandardFrameworkConfig;
+
 mod commands;
+mod data;
 mod handler;
-mod voice_manager;
 mod helpers;
+
+use data::InitialData;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = env::var("DISCORD_TOKEN").expect("Expected a DISCORD_TOKEN in the environment");
@@ -17,7 +18,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let configurator = StandardFrameworkConfig::new(&client.cache_and_http.http)?;
 
-    voice_manager::register_in_data(&mut client);
+    let initial_data = InitialData::from(&client);
+    initial_data.insert(&mut client.data.write());
 
     client.with_framework(
         StandardFramework::new()

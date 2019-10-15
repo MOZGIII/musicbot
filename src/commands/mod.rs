@@ -3,6 +3,7 @@ pub mod system;
 pub mod voice;
 
 pub mod prelude {
+    pub use crate::data::DataExt;
     pub use serenity::{
         client::Context,
         framework::standard::{
