@@ -1,4 +1,4 @@
-FROM rust:1.35-stretch AS builder
+FROM rust:1.38-stretch AS builder
 
 RUN echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list \
  && cat /etc/apt/sources.list \
