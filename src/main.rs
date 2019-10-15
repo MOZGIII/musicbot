@@ -8,6 +8,7 @@ use standard_framerork_config::StandardFrameworkConfig;
 mod commands;
 mod data;
 mod handler;
+mod help;
 
 use data::InitialData;
 
@@ -26,6 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .group(&commands::voice::VOICE_GROUP)
             .group(&commands::system::SYSTEM_GROUP)
             .group(&commands::experimental::EXPERIMENTAL_GROUP)
+            .help(&help::HELP)
             .before(|_, msg, command_name| {
                 println!(
                     "Got command '{}' by user '{}'",
