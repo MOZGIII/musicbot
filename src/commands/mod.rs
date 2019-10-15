@@ -8,7 +8,7 @@ pub mod prelude {
         client::Context,
         framework::standard::{
             macros::{command, group},
-            Args, CommandResult,
+            Args, CommandError, CommandResult,
         },
         model::{channel::Message, misc::Mentionable},
     };
