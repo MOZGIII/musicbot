@@ -1,11 +1,11 @@
-FROM rust:1.38-stretch AS builder
+FROM rust:1.38-buster AS builder
 
-RUN echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list \
+RUN echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list \
  && cat /etc/apt/sources.list \
  && apt-get update \
  && apt-get install -y --no-install-recommends \
-      -t stretch-backports \
-      "clang-6.0" \
+      -t buster-backports \
+      "clang-8" \
       "build-essential" \
       "libsodium-dev" \
  && rm -rf /var/lib/apt/lists/*
@@ -25,13 +25,13 @@ RUN ls -la \
  && cargo build --frozen --release \
  && ldd target/release/musicbot
 
-FROM debian:stretch
+FROM debian:buster
 
-RUN echo "deb http://deb.debian.org/debian stretch-backports main" >> /etc/apt/sources.list \
+RUN echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list \
  && cat /etc/apt/sources.list \
  && apt-get update \
  && apt-get install -y --no-install-recommends \
-      -t stretch-backports \
+      -t buster-backports \
       "libsodium23" \
       "libssl1.1" \
       "libcrypto++6" \
