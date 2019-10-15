@@ -13,7 +13,8 @@ mod help;
 use data::InitialData;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let token = env::var("DISCORD_TOKEN").expect("Expected a DISCORD_TOKEN in the environment");
+    let token =
+        env::var("DISCORD_TOKEN").map_err(|_| "Expected a DISCORD_TOKEN in the environment")?;
     let mut client = Client::new(&token, handler::Handler)?;
 
     let configurator = StandardFrameworkConfig::new(&client.cache_and_http.http)?;
