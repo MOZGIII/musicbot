@@ -5,8 +5,4 @@ authors = ["MOZGIII <mike-n@narod.ru>"]
 edition = "2018"
 
 [dependencies]
-
-[dependencies.serenity]
-git = "https://github.com/serenity-rs/serenity.git"
-branch = "v0.6.x"
-features = ["cache", "framework", "standard_framework", "voice"]
+serenity = { version = "0.7", features = ["cache", "framework", "standard_framework", "voice"] }

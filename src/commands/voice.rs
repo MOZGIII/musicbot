@@ -7,7 +7,7 @@ use crate::voice_manager::prelude::*;
 group!({
     name: "voice",
     options: {
-        only: "guilds",
+        only_in: "guilds",
     },
     commands: [join, leave, play_raw]
 });
