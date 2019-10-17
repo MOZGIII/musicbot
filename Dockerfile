@@ -44,10 +44,13 @@ RUN echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/so
       "rtmpdump" \
       "phantomjs" \
       "python3-pyxattr" \
+      "tini" \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/src/app/target/release/musicbot /usr/local/bin/musicbot
 
 RUN ["ldd", "/usr/local/bin/musicbot"]
+
+ENTRYPOINT [ "/usr/bin/tini", "--" ]
 
 CMD ["musicbot"]
