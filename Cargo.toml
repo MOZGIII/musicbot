@@ -5,4 +5,4 @@ authors = ["MOZGIII <mike-n@narod.ru>"]
 edition = "2018"
 
 [dependencies]
-serenity = { version = "0.7", features = ["cache", "framework", "standard_framework", "voice", "http", "rustls_backend"] }
+serenity = { version = "0.8", features = ["cache", "framework", "standard_framework", "voice", "http", "rustls_backend"] }
