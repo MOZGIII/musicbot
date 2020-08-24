@@ -1,31 +1,26 @@
 use super::prelude::*;
 use serenity::model::guild::Guild;
 use serenity::model::id::{ChannelId, GuildId};
-use serenity::prelude::RwLock;
-use serenity::prelude::ShareMap;
+use serenity::prelude::TypeMap;
 use serenity::voice;
-use std::sync::Arc;
 
-group!({
-    name: "voice",
-    options: {
-        only_in: "guilds",
-    },
-    commands: [join, leave, play]
-});
+#[group]
+#[commands(join, leave, play)]
+struct Voice;
 
 /// Get the guild the message was posted to, or bail if the message has no
 /// guild (i.e. it was a DM or group message).
-fn get_message_guild(ctx: &mut Context, msg: &Message) -> Result<Arc<RwLock<Guild>>, CommandError> {
+async fn get_message_guild(ctx: &Context, msg: &Message) -> Result<Guild, CommandError> {
     let guild = msg
         .guild(&ctx.cache)
+        .await
         .ok_or_else(|| "Groups and DMs not supported")?;
     Ok(guild)
 }
 
 /// Get a message author's voice channel, or bail if there's no voice channel
 /// (i.e. message author is not in a voice channel).
-fn get_message_author_voice_channel(
+async fn get_message_author_voice_channel(
     guild: &Guild,
     msg: &Message,
 ) -> Result<(GuildId, ChannelId), CommandError> {
@@ -38,13 +33,13 @@ fn get_message_author_voice_channel(
     Ok((guild.id, voice_channel_id))
 }
 
-fn join_voice_channel<G, C>(data: &ShareMap, guild_id: G, channel_id: C) -> CommandResult
+async fn join_voice_channel<G, C>(data: &TypeMap, guild_id: G, channel_id: C) -> CommandResult
 where
     G: Into<GuildId>,
     C: Into<ChannelId>,
 {
     let voice_manager_mutex = data.voice_manager();
-    let mut voice_manager = voice_manager_mutex.lock();
+    let mut voice_manager = voice_manager_mutex.lock().await;
 
     let _ = voice_manager
         .join(guild_id, channel_id)
@@ -53,12 +48,12 @@ where
     Ok(())
 }
 
-fn leave_voice_channel<G>(data: &ShareMap, guild_id: G) -> CommandResult
+async fn leave_voice_channel<G>(data: &TypeMap, guild_id: G) -> CommandResult
 where
     G: Into<GuildId> + Copy,
 {
     let voice_manager_mutex = data.voice_manager();
-    let mut voice_manager = voice_manager_mutex.lock();
+    let mut voice_manager = voice_manager_mutex.lock().await;
 
     let _ = voice_manager
         .get(guild_id)
@@ -72,39 +67,40 @@ where
 }
 
 #[command]
-fn join(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let guild = get_message_guild(ctx, msg)?;
-    let guild = guild.read();
-    let (guild_id, voice_channel_id) = get_message_author_voice_channel(&guild, msg)?;
-    join_voice_channel(&ctx.data.read(), guild_id, voice_channel_id)?;
+async fn join(ctx: &Context, msg: &Message) -> CommandResult {
+    let guild = get_message_guild(ctx, msg).await?;
+    let (guild_id, voice_channel_id) = get_message_author_voice_channel(&guild, msg).await?;
+    let data = ctx.data.read().await;
+    join_voice_channel(&*data, guild_id, voice_channel_id).await?;
     msg.channel_id
-        .say(&ctx.http, &format!("Joined {}", voice_channel_id.mention()))?;
+        .say(&ctx.http, &format!("Joined {}", voice_channel_id.mention()))
+        .await?;
     Ok(())
 }
 
 #[command]
-fn leave(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let guild = get_message_guild(ctx, msg)?;
-    let guild = guild.read();
-    leave_voice_channel(&ctx.data.read(), guild.id)?;
-    msg.channel_id.say(&ctx.http, "Left voice channel")?;
+async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
+    let guild = get_message_guild(ctx, msg).await?;
+    let data = ctx.data.read().await;
+    leave_voice_channel(&*data, guild.id).await?;
+    msg.channel_id.say(&ctx.http, "Left voice channel").await?;
     Ok(())
 }
 
 #[command]
-fn play(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
+async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let arg = args
         .single::<String>()
         .map_err(|_| "You must provide a URL to a YouTube video or audio or a search query")?;
 
-    let guild = get_message_guild(ctx, msg)?;
-    let guild = guild.read();
+    let guild = get_message_guild(ctx, msg).await?;
 
-    let (guild_id, voice_channel_id) = get_message_author_voice_channel(&guild, msg)?;
-    join_voice_channel(&ctx.data.read(), guild_id, voice_channel_id)?;
+    let (guild_id, voice_channel_id) = get_message_author_voice_channel(&guild, msg).await?;
+    let data = ctx.data.read().await;
+    join_voice_channel(&*data, guild_id, voice_channel_id).await?;
 
-    let voice_manager_mutex = ctx.data.read().voice_manager();
-    let mut voice_manager = voice_manager_mutex.lock();
+    let voice_manager_mutex = data.voice_manager();
+    let mut voice_manager = voice_manager_mutex.lock().await;
 
     let voice_control_handle = voice_manager
         .get_mut(guild.id)
@@ -113,9 +109,10 @@ fn play(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let is_url = arg.starts_with("http");
     let source = if is_url {
         voice::ytdl(&arg)
+            .await
             .map_err(|err| format!("Unable to play video from a YouTube URL: {:?}", err))?
     } else {
-        voice::ytdl_search(&arg).map_err(|err| {
+        voice::ytdl_search(&arg).await.map_err(|err| {
             format!(
                 "Unable to play video from the YouTube search results: {:?}",
                 err
@@ -124,6 +121,6 @@ fn play(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     };
 
     voice_control_handle.play_only(source);
-    msg.channel_id.say(&ctx.http, "Playing song")?;
+    msg.channel_id.say(&ctx.http, "Playing song").await?;
     Ok(())
 }

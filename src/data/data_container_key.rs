@@ -7,7 +7,7 @@ pub struct DataContainerKey<T> {
 
 impl<T: 'static> TypeMapKey for DataContainerKey<T>
 where
-    T: 'static,
+    T: Send + Sync + 'static,
 {
     type Value = T;
 }
@@ -18,27 +18,17 @@ where
     <Self as TypeMapKey>::Value: Send + Sync,
 {
     #[allow(dead_code)]
-    pub fn insert(data: &mut ShareMap, value: <Self as TypeMapKey>::Value) {
+    pub fn insert(data: &mut TypeMap, value: <Self as TypeMapKey>::Value) {
         data.insert::<Self>(value);
     }
 
     #[allow(dead_code)]
-    pub fn remove(data: &mut ShareMap) -> Option<<Self as TypeMapKey>::Value> {
-        data.remove::<Self>()
-    }
-
-    #[allow(dead_code)]
-    pub fn contains(data: &mut ShareMap) -> bool {
-        data.contains::<Self>()
-    }
-
-    #[allow(dead_code)]
-    pub fn get(data: &ShareMap) -> Option<&<Self as TypeMapKey>::Value> {
+    pub fn get(data: &TypeMap) -> Option<&<Self as TypeMapKey>::Value> {
         data.get::<Self>()
     }
 
     #[allow(dead_code)]
-    pub fn get_mut(data: &mut ShareMap) -> Option<&mut <Self as TypeMapKey>::Value> {
+    pub fn get_mut(data: &mut TypeMap) -> Option<&mut <Self as TypeMapKey>::Value> {
         data.get_mut::<Self>()
     }
 }

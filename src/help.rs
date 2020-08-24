@@ -8,13 +8,14 @@ use serenity::{
 use std::collections::HashSet;
 
 #[help]
-pub fn help(
-    context: &mut Context,
+pub async fn help(
+    context: &Context,
     msg: &Message,
     args: Args,
     help_options: &'static HelpOptions,
     groups: &[&'static CommandGroup],
     owners: HashSet<UserId>,
 ) -> CommandResult {
-    help_commands::with_embeds(context, msg, args, &help_options, groups, owners)
+    let _ = help_commands::with_embeds(context, msg, args, help_options, groups, owners).await;
+    Ok(())
 }

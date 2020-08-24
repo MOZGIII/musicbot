@@ -23,7 +23,7 @@ impl From<&Client> for InitialData {
 }
 
 impl InitialData {
-    pub fn insert(self, data: &mut ShareMap) {
+    pub fn insert(self, data: &mut TypeMap) {
         VoiceManagerKey::insert(data, self.voice_manager);
         ShardManagerKey::insert(data, self.shard_manager);
     }
@@ -34,7 +34,7 @@ pub trait DataExt {
     fn shard_manager(&self) -> Arc<Mutex<ShardManager>>;
 }
 
-impl DataExt for ShareMap {
+impl DataExt for TypeMap {
     fn voice_manager(&self) -> Arc<Mutex<ClientVoiceManager>> {
         Arc::clone(VoiceManagerKey::get(self).unwrap())
     }

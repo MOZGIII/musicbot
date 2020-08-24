@@ -1,23 +1,20 @@
 use super::prelude::*;
 
-group!({
-    name: "system",
-    options: {
-        owners_only: true,
-    },
-    commands: [quit, ping]
-});
+#[group]
+#[owners_only]
+#[commands(quit, ping)]
+struct System;
 
 #[command]
-fn quit(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let data = ctx.data.read();
-    data.shard_manager().lock().shutdown_all();
+async fn quit(ctx: &Context, msg: &Message) -> CommandResult {
+    let data = ctx.data.read().await;
+    data.shard_manager().lock().await.shutdown_all().await;
     let _ = msg.reply(&ctx, "Shutting down!");
     Ok(())
 }
 
 #[command]
-fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
+async fn ping(ctx: &Context, msg: &Message) -> CommandResult {
     let _ = msg.reply(&ctx, "Pong!");
     Ok(())
 }
