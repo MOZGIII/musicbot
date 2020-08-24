@@ -32,6 +32,7 @@ RUN echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/so
  && apt-get update \
  && apt-get install -y --no-install-recommends \
       -t buster-backports \
+      "libopus0" \
       "libsodium23" \
       "libssl1.1" \
       "libcrypto++6" \
