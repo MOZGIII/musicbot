@@ -1,4 +1,4 @@
-FROM rust:1.38-buster AS builder
+FROM rust:1.44-buster AS builder
 
 RUN echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list \
  && cat /etc/apt/sources.list \
