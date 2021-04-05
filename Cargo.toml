@@ -5,5 +5,5 @@ authors = ["MOZGIII <mike-n@narod.ru>"]
 edition = "2018"
 
 [dependencies]
-serenity = { version = "0.10.2", features = ["voice"] }
+serenity = { version = "0.10.5", features = ["voice"] }
 tokio = { version = "0.2", features = ["full"] }
